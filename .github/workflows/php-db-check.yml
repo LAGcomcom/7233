@@ -1,0 +1,18 @@
+name: PHP and DB Scripts Check
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: PHP syntax check
+        run: |
+          find webserver -name "*.php" -print0 | xargs -0 -I{} php -l {}
+      - name: Validate SQL files exist and non-empty
+        run: |
+          test -s database/migrations/001_init.sql
+          test -s database/migrations/001_rollback.sql
