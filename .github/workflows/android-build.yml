@@ -41,7 +41,7 @@ jobs:
             fi
           fi
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sms-forwarder-apk
           path: |
@@ -51,10 +51,17 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v3
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sms-forwarder-apk
+          path: dist-apk
       - name: Publish Release
         uses: softprops/action-gh-release@v1
         with:
-          files: android/app/build/outputs/apk/release/*.apk
+          files: dist-apk/**/*.apk
           body: 自动构建的短信转发器安装包
