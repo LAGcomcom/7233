@@ -1,5 +1,11 @@
 name: Build Android APK
 on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type (debug or release)'
+        required: true
+        default: 'release'
   push:
     tags: ['v*']
   pull_request:
@@ -18,13 +24,29 @@ jobs:
         uses: android-actions/setup-android@v2
       - name: Build APK
         run: |
+          set -e
           cd android
-          ./gradlew assembleRelease
+          if [ -x ./gradlew ]; then
+            if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+              ./gradlew :app:assembleDebug
+            else
+              ./gradlew :app:assembleRelease
+            fi
+          else
+            sudo apt-get update && sudo apt-get install -y gradle
+            if [ "${{ github.event.inputs.build_type }}" = "debug" ]; then
+              gradle :app:assembleDebug
+            else
+              gradle :app:assembleRelease
+            fi
+          fi
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: sms-forwarder-apk
-          path: android/app/build/outputs/apk/release/
+          path: |
+            android/app/build/outputs/apk/release/
+            android/app/build/outputs/apk/debug/
   release:
     needs: build
     runs-on: ubuntu-latest
